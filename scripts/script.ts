@@ -1,11 +1,17 @@
 interface Board {
     setPosition: (marker: string, position: number) => void,
-    getPosition: (index: number) => string
+    getPosition: (index: number) => string,
+    gameOver: (player1: Player, player2: Player) => Result
+}
+
+interface Result {
+    value: boolean,
+    result: string
 }
 
 const gameBoard: Board = (
     function() {
-        const board: string[] = [
+        let board: string[] = [
             "", 
             "", 
             "", 
@@ -22,25 +28,71 @@ const gameBoard: Board = (
                 board[position] = marker;
                 displayControl.renderBoard();
            }
-        }
+        };
 
-        const getPosition = (index: number) => board[index]
+        const getPosition = (index: number) => board[index];
+
+
+        const gameOver = (player1: Player, player2: Player): Result => {
+             let winPositions = [
+                 [
+                ((board[0] === board[1]) && (board[1] === board[2]) && (board[1] === player1.getMarker())),
+                ((board[3] === board[4]) && (board[4] === board[5]) && (board[4] === player1.getMarker())),
+                ((board[6] === board[7]) && (board[7] === board[8]) && (board[7] === player1.getMarker())),
+                ((board[0] === board[3]) && (board[3] === board[6]) && (board[3] === player1.getMarker())),
+                ((board[1] === board[4]) && (board[4] === board[7]) && (board[4] === player1.getMarker())),
+                ((board[2] === board[5]) && (board[5] === board[8]) && (board[5] === player1.getMarker())),
+                ((board[0] === board[4]) && (board[4] === board[8]) && (board[4] === player1.getMarker())),
+                ((board[2] === board[4]) && (board[4] === board[6]) && (board[4] === player1.getMarker())),
+             ],
+             [
+                ((board[0] === board[1]) && (board[1] === board[2]) && (board[1] === player2.getMarker())),
+                ((board[3] === board[4]) && (board[4] === board[5]) && (board[4] === player2.getMarker())),
+                ((board[6] === board[7]) && (board[7] === board[8]) && (board[7] === player2.getMarker())),
+                ((board[0] === board[3]) && (board[3] === board[6]) && (board[3] === player2.getMarker())),
+                ((board[1] === board[4]) && (board[4] === board[7]) && (board[4] === player2.getMarker())),
+                ((board[2] === board[5]) && (board[5] === board[8]) && (board[5] === player2.getMarker())),
+                ((board[0] === board[4]) && (board[4] === board[8]) && (board[4] === player2.getMarker())),
+                ((board[2] === board[4]) && (board[4] === board[6]) && (board[4] === player2.getMarker())), 
+             ]
+            ]
+            if(!winPositions[0].every((value) => value === false)) {
+                return {
+                    value: true,
+                    result: `${player1.getName()} wins`
+                }
+            } else if(!winPositions[1].every((value) => value === false)) {
+                return {
+                    value: true,
+                    result: `${player2.getName()} wins`
+                }
+            }else if(!board.some((value) => value === "")) {
+                return {
+                    value: true,
+                    result: `Tie`
+                }
+            } else return {
+                value: false,
+                result: ""
+            };
+        }
         return {
             setPosition,
-            getPosition
+            getPosition,
+            gameOver
         }
     }
 )()
 
 interface Player {
     getName: () => string,
-    turn: () => string
+    getMarker: () => string
 }
 
 const players = (name: string, marker: string): Player => {
     return {
         getName: () => name,
-        turn: () => marker
+        getMarker: () => marker
     }
 }
 
@@ -59,18 +111,21 @@ const game: Game = (
             init(): void{
                 this.player1 = players("player1", "A");
                 this.player2 = players("player2", "B");
-                this.turn = this.player1.turn()
+                this.turn = this.player1.getMarker()
                 this.changeTurn = () => {
-                    if(this.turn === this.player1?.turn()) {
-                        this.turn = this.player2?.turn();
+                    if(this.turn === this.player1?.getMarker()) {
+                        this.turn = this.player2?.getMarker();
                     }else {
-                        this.turn = this.player1?.turn();
+                        this.turn = this.player1?.getMarker();
                     }
                 }
                 this.play = (index: number) => {
                     if(typeof this.turn === "string" && this.changeTurn) {
-                        gameBoard.setPosition(this.turn, index)
-                        this.changeTurn()
+                        gameBoard.setPosition(this.turn, index);
+                        this.changeTurn();
+                        if(this.player1 && this.player2) {
+                            gameBoard.gameOver(this.player1, this.player2);
+                        }
                     }
                 }
             }
