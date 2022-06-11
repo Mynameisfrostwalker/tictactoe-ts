@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "Fantasy";
+    src: url(../assets/Fantasy\ Clipart.ttf);
+}
+
 :root {
     --theme-color-1: #176FE8;
     --theme-color-2: #E8176F;
@@ -26,6 +31,14 @@ header {
     grid-template-rows: 100px 100px 100px;
     align-content: center;
     justify-content: center;
+}
+
+.container div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: calc(10px + 3vw);
+    font-family: "Fantasy", Arial, Helvetica, sans-serif;
 }
 
 .container div:nth-child(3n) {
