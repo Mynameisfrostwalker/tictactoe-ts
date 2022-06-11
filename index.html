@@ -10,11 +10,41 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <div class="wrapper2">
+    <div class="wrapper1">
+
+        <form>
+
+            <h1>Tic tac toe</h1>
+
+            <div>
+                <section>
+                    <p>
+                        <input type="text" name="player1" id="player1" placeholder=" " required>
+                        <label for="player1">Player 1</label>
+                    </p>
+                </section>
+                <section>
+                    <p>
+                        <input type="text" name="player2" id="player2" placeholder=" " required>
+                        <label for="player2">Player 2</label>
+                    </p>
+                </section>
+            </div>
+
+            <section>
+                <button>Start</button>
+            </section>
+        </form>
+
+    </div>
+
+    <div class="wrapper2 invisible">
+
         <header>
             <div class="player1"></div>
             <div class="player2"></div>
         </header>
+
         <div class="container">
             <div class="cell" data-index="0"></div>
             <div class="cell" data-index="1"></div>
@@ -26,6 +56,7 @@
             <div class="cell" data-index="7"></div>
             <div class="cell" data-index="8"></div>
         </div>
+
         <div class="restart"></div>
     </div>
     <script src="scripts/script.js"></script>

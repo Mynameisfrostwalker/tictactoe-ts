@@ -12,16 +12,82 @@
 body {
     min-height: 100vh;
     min-width: 100vw;
+    background-color: var(--theme-color-1);
 }
 
+.wrapper1, 
 .wrapper2 {
     min-height: 100vh;
     min-width: 100vw;
-    background-color: var(--theme-color-1);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+form {
+    min-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+form div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-around;
+    min-width: 100%;
+}
+
+form h1 {
+    font-weight: bold; 
+    font-size: calc(10px + 3vw);
+}
+
+input[type="text"] {
+    background-color: var(--theme-color-3);
+    color: black;
+    border: none;
+    height: 2rem;
+    padding: 3px;
+}
+
+input[type="text"]:hover,
+input[type="text"]:focus {
+    outline: none;
+    border: 3px solid var(--theme-color-2);
+}
+
+form p:first-child {
+    position: relative;
+}
+
+form p:first-child label {
+    position: absolute;
+    top: 5px;
+    left: 3px;
+    font-weight: bold;
+}
+
+input[type="text"]:focus ~ label,
+input[type="text"]:not(:placeholder-shown) ~ label {
+    z-index: -1;
+}
+
+form button {
+    outline: none;
+    border: none;
+    height: 2rem;
+    width: 7rem;
+    background-color: var(--theme-color-2);
+    font-weight: bold;
+    padding: 5px;
+}
+
+form button:hover {
+    background-color: var(--theme-color-3);
 }
 
 header {
@@ -74,4 +140,8 @@ header {
 
 .restart {
     flex: 0 0 20vh;
+}
+
+.invisible {
+    display: none;
 }
