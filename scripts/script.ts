@@ -6,20 +6,21 @@ interface Board {
 const gameBoard: Board = (
     function() {
         const board: string[] = [
-            "X", 
-            "O", 
-            "X", 
-            "O", 
-            "X", 
-            "X", 
-            "X", 
-            "O",
-            "O"
+            "", 
+            "", 
+            "", 
+            "", 
+            "", 
+            "", 
+            "", 
+            "",
+            ""
             ];
 
         const setPosition = (marker: string, position: number): void => {
-           if(board[position] === "empty") {
+           if(board[position] === "") {
                 board[position] = marker;
+                displayControl.renderBoard();
            }
         }
 
@@ -32,8 +33,8 @@ const gameBoard: Board = (
 )()
 
 interface Player {
-    readonly getName: () => string,
-    readonly turn: () => string
+    getName: () => string,
+    turn: () => string
 }
 
 const players = (name: string, marker: string): Player => {
@@ -43,9 +44,39 @@ const players = (name: string, marker: string): Player => {
     }
 }
 
-const game = (
+interface Game {
+    player1?:  Player,
+    player2?: Player,
+    init: () => void,
+    turn?: string,
+    changeTurn?: () => void,
+    play?: (index: number) => void,
+}
+
+const game: Game = (
     function() {
-        
+        const game: Game = {
+            init(): void{
+                this.player1 = players("player1", "A");
+                this.player2 = players("player2", "B");
+                this.turn = this.player1.turn()
+                this.changeTurn = () => {
+                    if(this.turn === this.player1?.turn()) {
+                        this.turn = this.player2?.turn();
+                    }else {
+                        this.turn = this.player1?.turn();
+                    }
+                }
+                this.play = (index: number) => {
+                    if(typeof this.turn === "string" && this.changeTurn) {
+                        gameBoard.setPosition(this.turn, index)
+                        this.changeTurn()
+                    }
+                }
+            }
+        }
+
+        return game
     }
 )()
 
@@ -72,4 +103,22 @@ const displayControl = (
     }
 )()
 
-displayControl.renderBoard()
+function play(e: Event) {
+    if(!game.player1) {
+        game.init();
+    }
+    if(e.target instanceof Element) {
+        let index = e.target.getAttribute("data-index");
+        if(typeof index === "string") {
+            let nIndex = parseInt(index, 10);
+            if(game.play) {
+                game.play(nIndex);
+            }
+        }
+    }
+}
+
+const cells = document.querySelectorAll(".cell");
+cells.forEach((cell) => {
+    cell.addEventListener("click", play)
+})
