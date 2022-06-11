@@ -1,0 +1,57 @@
+:root {
+    --theme-color-1: #176FE8;
+    --theme-color-2: #E8176F;
+    --theme-color-3: #6FE817;
+}
+
+body {
+    min-height: 100vh;
+    min-width: 100vw;
+    background-color: var(--theme-color-1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+header {
+    flex: 0 0 10vh;
+}
+
+.container {
+    min-width: 100%; 
+    display: grid;
+    flex: 1 1 70vh;
+    grid-template-columns: 100px 100px 100px;
+    grid-template-rows: 100px 100px 100px;
+    align-content: center;
+    justify-content: center;
+}
+
+.container div:nth-child(3n) {
+    border-left: 3px solid var(--theme-color-2);
+}
+
+.container div:nth-child(3n - 2) {
+    border-right: 3px solid var(--theme-color-2);
+}
+
+.container div:nth-child(n + 6) {
+    border-top: 3px solid var(--theme-color-2);
+}
+
+.container div:nth-last-child(n + 6) {
+    border-bottom: 3px solid var(--theme-color-2);
+}
+
+.container div:nth-child(4) {
+    margin-bottom: -3px;
+}
+
+.container div:nth-child(6) {
+    margin-top: -3px;
+}
+
+.restart {
+    flex: 0 0 20vh;
+}
