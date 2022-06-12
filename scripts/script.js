@@ -12,10 +12,8 @@ const gameBoard = (function () {
         ""
     ];
     const setPosition = (marker, position) => {
-        if (board[position] === "") {
-            board[position] = marker;
-            displayControl.renderBoard();
-        }
+        board[position] = marker;
+        displayControl.renderBoard();
     };
     const getPosition = (index) => board[index];
     const gameOver = (player1, player2) => {
@@ -44,25 +42,29 @@ const gameBoard = (function () {
         if (!winPositions[0].every((value) => value === false)) {
             return {
                 value: true,
-                result: `${player1.getName()} wins`
+                result: `${player1.getName()} wins`,
+                winner: "Player1"
             };
         }
         else if (!winPositions[1].every((value) => value === false)) {
             return {
                 value: true,
-                result: `${player2.getName()} wins`
+                result: `${player2.getName()} wins`,
+                winner: "Player2"
             };
         }
         else if (!board.some((value) => value === "")) {
             return {
                 value: true,
-                result: `Tie`
+                result: `Tie`,
+                winner: "None"
             };
         }
         else
             return {
                 value: false,
-                result: ""
+                result: "",
+                winner: ""
             };
     };
     const clear = () => {
@@ -151,12 +153,27 @@ const game = (function () {
                 if (typeof this.turn === "string" && this.changeTurn) {
                     if (mode === "Human" || this.turn === ((_a = this.player1) === null || _a === void 0 ? void 0 : _a.getMarker())) {
                         if (typeof index === "number") {
-                            gameBoard.setPosition(this.turn, index);
+                            if (gameBoard.getPosition(index) === "") { //????
+                                gameBoard.setPosition(this.turn, index);
+                            }
+                            else {
+                                return;
+                            }
                         }
                     }
                     else {
                         if (this.difficulty === "easy") {
                             gameBoard.setPosition(this.turn, aiModes.easyMode());
+                        }
+                        if (this.difficulty === "medium") {
+                            displayControl.removeClick();
+                            gameBoard.setPosition(this.turn, aiModes.mediumMode());
+                            displayControl.addClick();
+                        }
+                        if (this.difficulty === "hard") {
+                            displayControl.removeClick();
+                            gameBoard.setPosition(this.turn, aiModes.hardMode());
+                            displayControl.addClick();
                         }
                     }
                     if (this.player1 && this.player2) {
@@ -272,8 +289,9 @@ const displayControl = (function () {
     const mode = document.querySelector("#difficulty");
     const _toggleMode = (e) => {
         if (e.target instanceof HTMLInputElement) {
-            if (e.target.checked) {
+            if (e.target.checked && (input2 instanceof HTMLInputElement)) {
                 input2 === null || input2 === void 0 ? void 0 : input2.setAttribute("disabled", "");
+                input2.value = "";
                 mode === null || mode === void 0 ? void 0 : mode.removeAttribute("disabled");
             }
             else {
@@ -283,6 +301,18 @@ const displayControl = (function () {
         }
     };
     aicheck === null || aicheck === void 0 ? void 0 : aicheck.addEventListener("input", _toggleMode);
+    const removeClick = () => {
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach((cell) => {
+            cell.removeEventListener("click", playGame);
+        });
+    };
+    const addClick = () => {
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach((cell) => {
+            cell.addEventListener("click", playGame);
+        });
+    };
     return {
         renderBoard,
         displayGame,
@@ -290,16 +320,120 @@ const displayControl = (function () {
         displayStart,
         endTurns,
         playGame,
-        removeMessage
+        removeMessage,
+        removeClick,
+        addClick
     };
 })();
 const aiModes = (function () {
     const easyMode = () => {
         const options = gameBoard.findEmptyCell();
-        const value = Math.floor(Math.random() * (options.length + 1));
+        const value = Math.floor(Math.random() * options.length);
         return options[value];
     };
+    const hardMode = () => {
+        function findFreeCell() {
+            if (gameBoard.findEmptyCell().length === 0) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        function evaluate() {
+            if (game.player1 && game.player2) {
+                const ans = gameBoard.gameOver(game.player1, game.player2);
+                if (ans.winner === "Player1") {
+                    return -10;
+                }
+                else if (ans.winner === "Player2") {
+                    return +10;
+                }
+                else {
+                    return 0;
+                }
+            }
+        }
+        function minimax(depth, player) {
+            var _a, _b;
+            let score = evaluate();
+            if (score === 10) {
+                return score - depth;
+            }
+            if (score === -10) {
+                return score + depth;
+            }
+            if (findFreeCell() === false) {
+                return 0;
+            }
+            if (player === ((_a = game.player2) === null || _a === void 0 ? void 0 : _a.getName())) {
+                let best = -1000;
+                for (let i = 0; i < 9; i++) {
+                    if (gameBoard.getPosition(i) === "") {
+                        gameBoard.setPosition(game.player2.getMarker(), i);
+                        if (game.player1) {
+                            let recursive = minimax(depth + 1, game.player1.getName());
+                            if (typeof recursive === "number") {
+                                best = Math.max(best, recursive);
+                                gameBoard.setPosition("", i);
+                            }
+                        }
+                    }
+                }
+                return best;
+            }
+            else if (player === ((_b = game.player1) === null || _b === void 0 ? void 0 : _b.getName())) {
+                let best = 1000;
+                for (let i = 0; i < 9; i++) {
+                    if (gameBoard.getPosition(i) === "") {
+                        gameBoard.setPosition(game.player1.getMarker(), i);
+                        if (game.player2) {
+                            let recursive = minimax(depth + 1, game.player2.getName());
+                            if (typeof recursive === "number") {
+                                best = Math.min(best, recursive);
+                                gameBoard.setPosition("", i);
+                            }
+                        }
+                    }
+                }
+                return best;
+            }
+        }
+        function findBest() {
+            var _a;
+            let bestVal = -1000;
+            let bestMove = 0;
+            for (let i = 0; i < 9; i++) {
+                if (gameBoard.getPosition(i) === "") {
+                    if (game.player1 && game.player2) {
+                        gameBoard.setPosition(game.player2.getMarker(), i);
+                        let moveVal = minimax(0, (_a = game.player1) === null || _a === void 0 ? void 0 : _a.getName());
+                        gameBoard.setPosition("", i);
+                        if (typeof moveVal === "number") {
+                            if (moveVal > bestVal) {
+                                bestMove = i;
+                                bestVal = moveVal;
+                            }
+                        }
+                    }
+                }
+            }
+            return bestMove;
+        }
+        return findBest();
+    };
+    const mediumMode = () => {
+        let val = Math.random();
+        if (val <= 0.5) {
+            return easyMode();
+        }
+        else {
+            return hardMode();
+        }
+    };
     return {
-        easyMode
+        easyMode,
+        hardMode,
+        mediumMode
     };
 })();

@@ -8,7 +8,8 @@ interface Board {
 
 interface Result {
     value: boolean,
-    result: string
+    result: string,
+    winner: string
 }
 
 const gameBoard: Board = (
@@ -26,10 +27,8 @@ const gameBoard: Board = (
             ];
 
         const setPosition = (marker: string, position: number): void => {
-           if(board[position] === "") {
-                board[position] = marker;
-                displayControl.renderBoard();
-           }
+            board[position] = marker;
+            displayControl.renderBoard();
         };
 
         const getPosition = (index: number) => board[index];
@@ -61,21 +60,25 @@ const gameBoard: Board = (
             if(!winPositions[0].every((value) => value === false)) {
                 return {
                     value: true,
-                    result: `${player1.getName()} wins`
+                    result: `${player1.getName()} wins`,
+                    winner: "Player1"
                 }
             } else if(!winPositions[1].every((value) => value === false)) {
                 return {
                     value: true,
-                    result: `${player2.getName()} wins`
+                    result: `${player2.getName()} wins`,
+                    winner: "Player2"
                 }
             }else if(!board.some((value) => value === "")) {
                 return {
                     value: true,
-                    result: `Tie`
+                    result: `Tie`,
+                    winner: "None"
                 }
             } else return {
                 value: false,
-                result: ""
+                result: "",
+                winner: ""
             };
         }
 
@@ -191,11 +194,27 @@ const game: Game = (
                     if(typeof this.turn === "string" && this.changeTurn) {
                         if(mode === "Human" || this.turn === this.player1?.getMarker()) {
                             if(typeof index === "number"){
-                                gameBoard.setPosition(this.turn, index);
+                                if(gameBoard.getPosition(index) === "") { //????
+                                    gameBoard.setPosition(this.turn, index);
+                                } else {
+                                    return
+                                }
                             }
                         }else {
                             if(this.difficulty === "easy") {
                                 gameBoard.setPosition(this.turn, aiModes.easyMode());
+                            }
+
+                            if(this.difficulty === "medium") {
+                                displayControl.removeClick()
+                                gameBoard.setPosition(this.turn, aiModes.mediumMode());
+                                displayControl.addClick()
+                            }
+
+                            if(this.difficulty === "hard") {
+                                displayControl.removeClick()
+                                gameBoard.setPosition(this.turn, aiModes.hardMode());
+                                displayControl.addClick()
                             }
                         }
                         if(this.player1 && this.player2) {
@@ -247,6 +266,8 @@ interface displayControl {
     endTurns: (result: Result) => void,
     playGame: (e: Event) => void,
     removeMessage: () => void,
+    removeClick: () => void,
+    addClick: () => void,
 }
 
 const displayControl = (
@@ -341,8 +362,9 @@ const displayControl = (
 
         const _toggleMode = (e: Event) => {
             if(e.target instanceof HTMLInputElement) {
-                if(e.target.checked) {
+                if(e.target.checked && (input2 instanceof HTMLInputElement)) {
                     input2?.setAttribute("disabled", "");
+                    input2.value = "";
                     mode?.removeAttribute("disabled");
                 } else {
                     input2?.removeAttribute("disabled");
@@ -351,7 +373,23 @@ const displayControl = (
             }
         }
 
-        aicheck?.addEventListener("input", _toggleMode)
+        aicheck?.addEventListener("input", _toggleMode);
+
+        const removeClick = () => {
+            const cells = document.querySelectorAll(".cell");
+
+            cells.forEach((cell) => {
+                cell.removeEventListener("click", playGame)
+            })
+        }
+
+        const addClick = () => {
+            const cells = document.querySelectorAll(".cell");
+
+            cells.forEach((cell) => {
+                cell.addEventListener("click", playGame)
+            })
+        }
 
         return {
             renderBoard,
@@ -360,26 +398,135 @@ const displayControl = (
             displayStart,
             endTurns,
             playGame,
-            removeMessage
+            removeMessage,
+            removeClick,
+            addClick
         }
     }
 )()
 
 interface AImodes {
     easyMode: () => number,
+    hardMode: () => number,
+    mediumMode: () => number,
 }
 
 const aiModes: AImodes = (
     function() {
         const easyMode = (): number => {
             const options = gameBoard.findEmptyCell();
-            const value = Math.floor(Math.random() * (options.length + 1));
+            const value = Math.floor(Math.random() * options.length);
             return options[value];
         }
 
+        const hardMode = (): number => {
+            function findFreeCell() {
+              if(gameBoard.findEmptyCell().length === 0) {
+                  return false
+              }  else {
+                  return true
+              }
+            }
+
+            function evaluate() {
+                if(game.player1 && game.player2) {
+                    const ans = gameBoard.gameOver(game.player1, game.player2);
+                    if(ans.winner === "Player1") {
+                        return -10
+                    } else if(ans.winner === "Player2") {
+                        return +10
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+
+            function minimax (depth: number, player: string) {
+                let score = evaluate();
+
+                if(score === 10) {
+                    return score - depth
+                }
+
+                if(score === -10) {
+                    return score + depth
+                }
+
+                if(findFreeCell() === false) {
+                    return 0
+                }
+
+                if(player === game.player2?.getName()) {
+                    let best = -1000;
+                    for (let i = 0; i < 9; i++) {
+                        if (gameBoard.getPosition(i) === "") {
+                            gameBoard.setPosition(game.player2.getMarker(), i)
+                            if(game.player1) {
+                                let recursive = minimax(depth + 1, game.player1.getName())
+                                if(typeof recursive === "number") {
+                                    best = Math.max(best, recursive);
+                                    gameBoard.setPosition("", i)
+                                }
+                            }
+                        }
+                    }
+                    return best;
+                }else if (player === game.player1?.getName()) {
+                    let best = 1000;
+                    for (let i = 0; i < 9; i++) {
+                        if (gameBoard.getPosition(i) === "") {
+                            gameBoard.setPosition(game.player1.getMarker(), i)
+                            if(game.player2) {
+                                let recursive = minimax(depth + 1, game.player2.getName())
+                                if(typeof recursive === "number"){
+                                    best = Math.min(best, recursive);
+                                    gameBoard.setPosition("", i)
+                                }
+                            }
+                        }
+                    }
+                    return best
+                }
+            }
+
+            function findBest(): number {
+                let bestVal = -1000;
+                let bestMove = 0;
+                for(let i = 0; i < 9; i++) {
+                    if(gameBoard.getPosition(i) === "") {
+                        if(game.player1 && game.player2) {
+                            gameBoard.setPosition(game.player2.getMarker(), i)
+                            let moveVal = minimax(0, game.player1?.getName());
+                            gameBoard.setPosition("", i)
+
+                            if(typeof moveVal === "number") {
+                                if (moveVal > bestVal) {
+                                    bestMove = i;
+                                    bestVal = moveVal;
+                                }
+                            }
+                        }
+                    }
+                }
+                return bestMove;
+            }
+
+            return findBest();
+        }
+
+        const mediumMode = () => {
+            let val = Math.random();
+            if (val <= 0.5) {
+                return easyMode()
+            } else {
+                return hardMode()
+            }
+        }
 
         return {
-            easyMode
+            easyMode,
+            hardMode,
+            mediumMode
         }
     }
 )()
