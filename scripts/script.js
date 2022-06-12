@@ -93,13 +93,16 @@ const players = (name, marker) => {
     };
 };
 const game = (function () {
+    function _isInputElement(element) {
+        return ((element === null || element === void 0 ? void 0 : element.id) === "player1") || ((element === null || element === void 0 ? void 0 : element.id) === "player2");
+    }
     let game = {
         begin(e) {
             e.preventDefault();
             if (e.target instanceof Element) {
                 let player1 = e.target.querySelector("#player1");
                 let player2 = e.target.querySelector("#player2");
-                if (isInputElement(player1) && isInputElement(player2)) {
+                if (_isInputElement(player1) && _isInputElement(player2)) {
                     displayControl.displayGame(player1.value, player2.value);
                     this.init(player1.value, player2.value);
                 }
@@ -232,6 +235,22 @@ const displayControl = (function () {
             message.textContent = "";
         }
     };
+    const input2 = document.querySelector("#player2");
+    const aicheck = document.querySelector("#AI");
+    const mode = document.querySelector("#mode");
+    const _toggleMode = (e) => {
+        if (e.target instanceof HTMLInputElement) {
+            if (e.target.checked) {
+                input2 === null || input2 === void 0 ? void 0 : input2.setAttribute("disabled", "");
+                mode === null || mode === void 0 ? void 0 : mode.removeAttribute("disabled");
+            }
+            else {
+                input2 === null || input2 === void 0 ? void 0 : input2.removeAttribute("disabled");
+                mode === null || mode === void 0 ? void 0 : mode.setAttribute("disabled", "");
+            }
+        }
+    };
+    aicheck === null || aicheck === void 0 ? void 0 : aicheck.addEventListener("input", _toggleMode);
     return {
         renderBoard,
         displayGame,
@@ -242,33 +261,3 @@ const displayControl = (function () {
         removeMessage
     };
 })();
-function isInputElement(element) {
-    return ((element === null || element === void 0 ? void 0 : element.id) === "player1") || ((element === null || element === void 0 ? void 0 : element.id) === "player2");
-}
-/*
-
-function begin(e: Event) {
-    e.preventDefault();
-    if(e.target instanceof Element) {
-        let player1 = e.target.querySelector("#player1");
-        let player2 = e.target.querySelector("#player2");
-        if(isInputElement(player1) && isInputElement(player2)) {
-            displayControl.displayGame(player1.value, player2.value);
-            game.init(player1.value, player2.value)
-        }
-    }
-}
-
-const restart = () => {
-    game.restart();
-    displayControl.removeMessage();
-    displayControl.displayStart();
-}
-
-const form = document.querySelector("form");
-form?.addEventListener("submit", begin)
-
-const button = document.querySelector("button.restart");
-button?.addEventListener("click", restart)
-
-*/ 

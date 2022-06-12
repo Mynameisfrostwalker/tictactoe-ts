@@ -128,6 +128,10 @@ interface Game {
 const game: Game = (
     function() { 
 
+        function _isInputElement(element: HTMLInputElement | Element | null): element is HTMLInputElement{
+            return (element?.id === "player1") || (element?.id === "player2");
+        }
+
         let game: Game = {
 
             begin(e: Event) {
@@ -135,7 +139,7 @@ const game: Game = (
                 if(e.target instanceof Element) {
                     let player1 = e.target.querySelector("#player1");
                     let player2 = e.target.querySelector("#player2");
-                    if(isInputElement(player1) && isInputElement(player2)) {
+                    if(_isInputElement(player1) && _isInputElement(player2)) {
                         displayControl.displayGame(player1.value, player2.value);
                         this.init(player1.value, player2.value)
                     }
@@ -298,6 +302,24 @@ const displayControl = (
             }
         }
 
+        const input2 = document.querySelector("#player2");
+        const aicheck = document.querySelector("#AI");
+        const mode = document.querySelector("#mode")
+
+        const _toggleMode = (e: Event) => {
+            if(e.target instanceof HTMLInputElement) {
+                if(e.target.checked) {
+                    input2?.setAttribute("disabled", "");
+                    mode?.removeAttribute("disabled");
+                } else {
+                    input2?.removeAttribute("disabled");
+                    mode?.setAttribute("disabled", "");
+                }
+            }
+        }
+
+        aicheck?.addEventListener("input", _toggleMode)
+
         return {
             renderBoard,
             displayGame,
@@ -309,35 +331,3 @@ const displayControl = (
         }
     }
 )()
-
-function isInputElement(element: HTMLInputElement | Element | null): element is HTMLInputElement{
-    return (element?.id === "player1") || (element?.id === "player2");
-}
-
-/*
-
-function begin(e: Event) {
-    e.preventDefault();
-    if(e.target instanceof Element) {
-        let player1 = e.target.querySelector("#player1");
-        let player2 = e.target.querySelector("#player2");
-        if(isInputElement(player1) && isInputElement(player2)) {
-            displayControl.displayGame(player1.value, player2.value);
-            game.init(player1.value, player2.value)
-        }
-    }
-}
-
-const restart = () => {
-    game.restart();
-    displayControl.removeMessage();
-    displayControl.displayStart();
-}
-
-const form = document.querySelector("form");
-form?.addEventListener("submit", begin)
-
-const button = document.querySelector("button.restart");
-button?.addEventListener("click", restart)
-
-*/

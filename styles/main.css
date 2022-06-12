@@ -35,10 +35,10 @@ form {
     justify-content: space-around;
 }
 
-form div {
+form > div {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-around;
     min-width: 100%;
 }
@@ -62,11 +62,16 @@ input[type="text"]:focus {
     border: 3px solid var(--theme-color-2);
 }
 
+input[type="text"]:disabled {
+    background-color: grey;
+    border: none;
+}
+
 form p:first-child {
     position: relative;
 }
 
-form p:first-child label {
+form p:first-child label:not(.ailabel) {
     position: absolute;
     top: 5px;
     left: 3px;
@@ -170,4 +175,10 @@ div.restart {
 
 .message {
     font-size: calc(10px + 2vw);
+}
+
+.aidiv {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
 }

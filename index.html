@@ -23,11 +23,25 @@
                         <label for="player1">Player 1</label>
                     </p>
                 </section>
-                <section>
+                <section class="secondPlayer">
                     <p>
                         <input type="text" name="player2" id="player2" placeholder=" " required>
                         <label for="player2">Player 2</label>
                     </p>
+                    <div class="aidiv">
+                        <p>
+                            <input type="checkbox" name="AI" id="AI">
+                            <label for="AI" class="ailabel">AI</label>
+                        </p>
+                        <p>
+                            <select name="mode" id="mode" required disabled>
+                                <option value="mode" disabled selected>Mode</option>
+                                <option value="hard">Hard</option>
+                                <option value="medium">Medium</option>
+                                <option value="easy">Easy</option>
+                            </select>
+                        </p>
+                    </div>
                 </section>
             </div>
 
