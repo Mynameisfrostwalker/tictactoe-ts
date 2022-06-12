@@ -94,6 +94,17 @@ const players = (name, marker) => {
 };
 const game = (function () {
     let game = {
+        begin(e) {
+            e.preventDefault();
+            if (e.target instanceof Element) {
+                let player1 = e.target.querySelector("#player1");
+                let player2 = e.target.querySelector("#player2");
+                if (isInputElement(player1) && isInputElement(player2)) {
+                    displayControl.displayGame(player1.value, player2.value);
+                    this.init(player1.value, player2.value);
+                }
+            }
+        },
         init(player1Name, player2Name) {
             this.player1 = players(player1Name, "A");
             this.player2 = players(player2Name, "B");
@@ -136,9 +147,15 @@ const game = (function () {
         },
         restart() {
             gameBoard.clear();
-            game = { init: this.init, restart: this.restart };
+            game = { begin: this.begin, init: this.init, restart: this.restart };
+            displayControl.removeMessage();
+            displayControl.displayStart();
         }
     };
+    const form = document.querySelector("form");
+    form === null || form === void 0 ? void 0 : form.addEventListener("submit", game.begin.bind(game));
+    const button = document.querySelector("button.restart");
+    button === null || button === void 0 ? void 0 : button.addEventListener("click", game.restart);
     return game;
 })();
 const displayControl = (function () {
@@ -228,23 +245,30 @@ const displayControl = (function () {
 function isInputElement(element) {
     return ((element === null || element === void 0 ? void 0 : element.id) === "player1") || ((element === null || element === void 0 ? void 0 : element.id) === "player2");
 }
-function begin(e) {
+/*
+
+function begin(e: Event) {
     e.preventDefault();
-    if (e.target instanceof Element) {
+    if(e.target instanceof Element) {
         let player1 = e.target.querySelector("#player1");
         let player2 = e.target.querySelector("#player2");
-        if (isInputElement(player1) && isInputElement(player2)) {
+        if(isInputElement(player1) && isInputElement(player2)) {
             displayControl.displayGame(player1.value, player2.value);
-            game.init(player1.value, player2.value);
+            game.init(player1.value, player2.value)
         }
     }
 }
+
 const restart = () => {
     game.restart();
     displayControl.removeMessage();
     displayControl.displayStart();
-};
+}
+
 const form = document.querySelector("form");
-form === null || form === void 0 ? void 0 : form.addEventListener("submit", begin);
+form?.addEventListener("submit", begin)
+
 const button = document.querySelector("button.restart");
-button === null || button === void 0 ? void 0 : button.addEventListener("click", restart);
+button?.addEventListener("click", restart)
+
+*/ 

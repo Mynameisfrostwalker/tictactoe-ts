@@ -115,6 +115,7 @@ const players = (name: string, marker: string): Player => {
 }
 
 interface Game {
+    begin: (e: Event) => void
     player1?:  Player,
     player2?: Player,
     init: (player1Name: string, player2Name: string) => void,
@@ -128,6 +129,18 @@ const game: Game = (
     function() { 
 
         let game: Game = {
+
+            begin(e: Event) {
+                e.preventDefault();
+                if(e.target instanceof Element) {
+                    let player1 = e.target.querySelector("#player1");
+                    let player2 = e.target.querySelector("#player2");
+                    if(isInputElement(player1) && isInputElement(player2)) {
+                        displayControl.displayGame(player1.value, player2.value);
+                        this.init(player1.value, player2.value)
+                    }
+                }
+            },
 
             init(player1Name: string, player2Name: string): void {
                 this.player1 = players(player1Name, "A");
@@ -173,9 +186,17 @@ const game: Game = (
 
             restart() {
                 gameBoard.clear();
-                game = {init: this.init, restart: this.restart};
+                game = {begin: this.begin, init: this.init, restart: this.restart};
+                displayControl.removeMessage();
+                displayControl.displayStart();
             }
         }
+
+        const form = document.querySelector("form");
+        form?.addEventListener("submit", game.begin.bind(game))
+
+        const button = document.querySelector("button.restart");
+        button?.addEventListener("click", game.restart)
 
         return game
     }
@@ -293,6 +314,8 @@ function isInputElement(element: HTMLInputElement | Element | null): element is 
     return (element?.id === "player1") || (element?.id === "player2");
 }
 
+/*
+
 function begin(e: Event) {
     e.preventDefault();
     if(e.target instanceof Element) {
@@ -316,3 +339,5 @@ form?.addEventListener("submit", begin)
 
 const button = document.querySelector("button.restart");
 button?.addEventListener("click", restart)
+
+*/
