@@ -1,7 +1,8 @@
 interface Board {
     setPosition: (marker: string, position: number) => void,
     getPosition: (index: number) => string,
-    gameOver: (player1: Player, player2: Player) => Result
+    gameOver: (player1: Player, player2: Player) => Result,
+    clear: () => void
 }
 
 interface Result {
@@ -76,10 +77,27 @@ const gameBoard: Board = (
                 result: ""
             };
         }
+
+        const clear = () => {
+            board = [
+                "", 
+                "", 
+                "", 
+                "", 
+                "", 
+                "", 
+                "", 
+                "",
+                ""
+                ] 
+                displayControl.renderBoard();
+        }
+
         return {
             setPosition,
             getPosition,
-            gameOver
+            gameOver,
+            clear
         }
     }
 )()
@@ -103,11 +121,14 @@ interface Game {
     turn?: string,
     changeTurn?: () => void,
     play?: (index: number) => void,
+    restart: () => void,
 }
 
 const game: Game = (
-    function() {
-        const game: Game = {
+    function() { 
+
+        let game: Game = {
+
             init(player1Name: string, player2Name: string): void {
                 this.player1 = players(player1Name, "A");
                 this.player2 = players(player2Name, "B");
@@ -130,16 +151,29 @@ const game: Game = (
                 this.play = (index: number) => {
                     if(typeof this.turn === "string" && this.changeTurn) {
                         gameBoard.setPosition(this.turn, index);
-                        this.changeTurn();
                         if(this.player1 && this.player2) {
-                            gameBoard.gameOver(this.player1, this.player2);
+                            const result = gameBoard.gameOver(this.player1, this.player2);
+                            if(result.value === true) {
+                                displayControl.endTurns(result)
+                                return
+                            }
                         }
+                        this.changeTurn();
                     }
                 }
 
                 if(this.player1) {
                     displayControl.showTurn(this.player1)
                 }
+                const cells = document.querySelectorAll(".cell");
+                cells.forEach((cell) => {
+                    cell.addEventListener("click", displayControl.playGame)
+                })
+            },
+
+            restart() {
+                gameBoard.clear();
+                game = {init: this.init, restart: this.restart};
             }
         }
 
@@ -149,11 +183,29 @@ const game: Game = (
 
 interface displayControl {
     renderBoard: () => void,
-    displayGame: (player1: string, player2: string) => void
+    displayGame: (player1: string, player2: string) => void,
+    showTurn: (player: Player) => void,
+    displayStart: () => void,
+    endTurns: (result: Result) => void,
+    playGame: (e: Event) => void,
+    removeMessage: () => void,
 }
 
 const displayControl = (
     function() {
+
+        function playGame(e: Event) {
+            if(e.target instanceof Element) {
+                let index = e.target.getAttribute("data-index");
+                if(typeof index === "string") {
+                    let nIndex = parseInt(index, 10);
+                    if(game.play) {
+                        game.play(nIndex);
+                    }
+                }
+            }
+        }
+
         const renderBoard = (): void => {
             const cells = document.querySelectorAll(".cell");
             cells.forEach((cell) => {
@@ -196,25 +248,46 @@ const displayControl = (
             }
         }
 
+        const displayStart = () => {
+            const wrapper1 = document.querySelector(".wrapper1");
+            const wrapper2 = document.querySelector(".wrapper2");
+
+            if(wrapper1 && wrapper2) {
+                wrapper1.classList.remove("invisible");
+                wrapper2.classList.add("invisible");
+            }
+        }
+
+        const endTurns = (result: Result) => {
+            const cells = document.querySelectorAll(".cell");
+            const message = document.querySelector(".message");
+
+            cells.forEach((cell) => {
+                cell.removeEventListener("click", playGame)
+            })
+            if(message) {
+                message.textContent = result.result;
+            }
+        }
+
+        const removeMessage = () => {
+            const message = document.querySelector(".message"); 
+            if(message) {
+                message.textContent = "";
+            }
+        }
+
         return {
             renderBoard,
             displayGame,
-            showTurn
+            showTurn,
+            displayStart,
+            endTurns,
+            playGame,
+            removeMessage
         }
     }
 )()
-
-function play(e: Event) {
-    if(e.target instanceof Element) {
-        let index = e.target.getAttribute("data-index");
-        if(typeof index === "string") {
-            let nIndex = parseInt(index, 10);
-            if(game.play) {
-                game.play(nIndex);
-            }
-        }
-    }
-}
 
 function isInputElement(element: HTMLInputElement | Element | null): element is HTMLInputElement{
     return (element?.id === "player1") || (element?.id === "player2");
@@ -232,10 +305,14 @@ function begin(e: Event) {
     }
 }
 
-const cells = document.querySelectorAll(".cell");
-cells.forEach((cell) => {
-    cell.addEventListener("click", play)
-})
+const restart = () => {
+    game.restart();
+    displayControl.removeMessage();
+    displayControl.displayStart();
+}
 
 const form = document.querySelector("form");
 form?.addEventListener("submit", begin)
+
+const button = document.querySelector("button.restart");
+button?.addEventListener("click", restart)

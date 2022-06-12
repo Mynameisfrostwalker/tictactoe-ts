@@ -65,10 +65,25 @@ const gameBoard = (function () {
                 result: ""
             };
     };
+    const clear = () => {
+        board = [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ];
+        displayControl.renderBoard();
+    };
     return {
         setPosition,
         getPosition,
-        gameOver
+        gameOver,
+        clear
     };
 })();
 const players = (name, marker) => {
@@ -78,7 +93,7 @@ const players = (name, marker) => {
     };
 };
 const game = (function () {
-    const game = {
+    let game = {
         init(player1Name, player2Name) {
             this.player1 = players(player1Name, "A");
             this.player2 = players(player2Name, "B");
@@ -101,20 +116,43 @@ const game = (function () {
             this.play = (index) => {
                 if (typeof this.turn === "string" && this.changeTurn) {
                     gameBoard.setPosition(this.turn, index);
-                    this.changeTurn();
                     if (this.player1 && this.player2) {
-                        gameBoard.gameOver(this.player1, this.player2);
+                        const result = gameBoard.gameOver(this.player1, this.player2);
+                        if (result.value === true) {
+                            displayControl.endTurns(result);
+                            return;
+                        }
                     }
+                    this.changeTurn();
                 }
             };
             if (this.player1) {
                 displayControl.showTurn(this.player1);
             }
+            const cells = document.querySelectorAll(".cell");
+            cells.forEach((cell) => {
+                cell.addEventListener("click", displayControl.playGame);
+            });
+        },
+        restart() {
+            gameBoard.clear();
+            game = { init: this.init, restart: this.restart };
         }
     };
     return game;
 })();
 const displayControl = (function () {
+    function playGame(e) {
+        if (e.target instanceof Element) {
+            let index = e.target.getAttribute("data-index");
+            if (typeof index === "string") {
+                let nIndex = parseInt(index, 10);
+                if (game.play) {
+                    game.play(nIndex);
+                }
+            }
+        }
+    }
     const renderBoard = () => {
         const cells = document.querySelectorAll(".cell");
         cells.forEach((cell) => {
@@ -153,23 +191,40 @@ const displayControl = (function () {
             }
         }
     };
+    const displayStart = () => {
+        const wrapper1 = document.querySelector(".wrapper1");
+        const wrapper2 = document.querySelector(".wrapper2");
+        if (wrapper1 && wrapper2) {
+            wrapper1.classList.remove("invisible");
+            wrapper2.classList.add("invisible");
+        }
+    };
+    const endTurns = (result) => {
+        const cells = document.querySelectorAll(".cell");
+        const message = document.querySelector(".message");
+        cells.forEach((cell) => {
+            cell.removeEventListener("click", playGame);
+        });
+        if (message) {
+            message.textContent = result.result;
+        }
+    };
+    const removeMessage = () => {
+        const message = document.querySelector(".message");
+        if (message) {
+            message.textContent = "";
+        }
+    };
     return {
         renderBoard,
         displayGame,
-        showTurn
+        showTurn,
+        displayStart,
+        endTurns,
+        playGame,
+        removeMessage
     };
 })();
-function play(e) {
-    if (e.target instanceof Element) {
-        let index = e.target.getAttribute("data-index");
-        if (typeof index === "string") {
-            let nIndex = parseInt(index, 10);
-            if (game.play) {
-                game.play(nIndex);
-            }
-        }
-    }
-}
 function isInputElement(element) {
     return ((element === null || element === void 0 ? void 0 : element.id) === "player1") || ((element === null || element === void 0 ? void 0 : element.id) === "player2");
 }
@@ -184,9 +239,12 @@ function begin(e) {
         }
     }
 }
-const cells = document.querySelectorAll(".cell");
-cells.forEach((cell) => {
-    cell.addEventListener("click", play);
-});
+const restart = () => {
+    game.restart();
+    displayControl.removeMessage();
+    displayControl.displayStart();
+};
 const form = document.querySelector("form");
 form === null || form === void 0 ? void 0 : form.addEventListener("submit", begin);
+const button = document.querySelector("button.restart");
+button === null || button === void 0 ? void 0 : button.addEventListener("click", restart);

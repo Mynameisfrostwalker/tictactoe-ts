@@ -13,6 +13,7 @@ body {
     min-height: 100vh;
     min-width: 100vw;
     background-color: var(--theme-color-1);
+    overflow-x: hidden;
 }
 
 .wrapper1, 
@@ -23,6 +24,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
 form {
@@ -76,7 +78,7 @@ input[type="text"]:not(:placeholder-shown) ~ label {
     z-index: -1;
 }
 
-form button {
+form button, .restart button {
     outline: none;
     border: none;
     height: 2rem;
@@ -86,18 +88,17 @@ form button {
     padding: 5px;
 }
 
-form button:hover {
+form button:hover, .restart button:hover {
     background-color: var(--theme-color-3);
 }
 
 header {
     flex: 0 0 10vh;
     width: 100%;
-    padding: 1rem;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    font-size: calc(15px + 5vw);
+    font-size: calc(15px + 3vw);
 }
 
 header div {
@@ -148,7 +149,7 @@ header div {
     margin-top: -3px;
 }
 
-.restart {
+div.restart {
     flex: 0 0 20vh;
 }
 
@@ -156,6 +157,17 @@ header div {
     display: none;
 }
 
-.turn {
-    border: 3px solid var(--theme-color-3);
+.turn, .message {
+    color: var(--theme-color-3);
+    text-align: center;
+}
+
+div.restart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.message {
+    font-size: calc(10px + 2vw);
 }
