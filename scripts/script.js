@@ -42,19 +42,28 @@ const gameBoard = (function () {
             ]
         ];
         if (!winPositions[0].every((value) => value === false)) {
-            alert("Player 1 wins");
-            return true;
+            return {
+                value: true,
+                result: `${player1.getName()} wins`
+            };
         }
         else if (!winPositions[1].every((value) => value === false)) {
-            alert("Player 2 wins");
-            return true;
+            return {
+                value: true,
+                result: `${player2.getName()} wins`
+            };
         }
         else if (!board.some((value) => value === "")) {
-            alert("tie");
-            return true;
+            return {
+                value: true,
+                result: `Tie`
+            };
         }
         else
-            return false;
+            return {
+                value: false,
+                result: ""
+            };
     };
     return {
         setPosition,
@@ -70,17 +79,23 @@ const players = (name, marker) => {
 };
 const game = (function () {
     const game = {
-        init() {
-            this.player1 = players("player1", "A");
-            this.player2 = players("player2", "B");
+        init(player1Name, player2Name) {
+            this.player1 = players(player1Name, "A");
+            this.player2 = players(player2Name, "B");
             this.turn = this.player1.getMarker();
             this.changeTurn = () => {
                 var _a, _b, _c;
                 if (this.turn === ((_a = this.player1) === null || _a === void 0 ? void 0 : _a.getMarker())) {
                     this.turn = (_b = this.player2) === null || _b === void 0 ? void 0 : _b.getMarker();
+                    if (this.player2) {
+                        displayControl.showTurn(this.player2);
+                    }
                 }
                 else {
                     this.turn = (_c = this.player1) === null || _c === void 0 ? void 0 : _c.getMarker();
+                    if (this.player1) {
+                        displayControl.showTurn(this.player1);
+                    }
                 }
             };
             this.play = (index) => {
@@ -92,6 +107,9 @@ const game = (function () {
                     }
                 }
             };
+            if (this.player1) {
+                displayControl.showTurn(this.player1);
+            }
         }
     };
     return game;
@@ -107,14 +125,41 @@ const displayControl = (function () {
             }
         });
     };
+    const displayGame = (player1, player2) => {
+        const wrapper1 = document.querySelector(".wrapper1");
+        const wrapper2 = document.querySelector(".wrapper2");
+        const player1card = document.querySelector(".player1");
+        const player2card = document.querySelector(".player2");
+        if (wrapper1 && wrapper2 && player1card && player2card) {
+            wrapper1.classList.add("invisible");
+            wrapper2.classList.remove("invisible");
+            player1card.textContent = player1;
+            player2card.textContent = player2;
+        }
+    };
+    const showTurn = (player) => {
+        const player1card = document.querySelector(".player1");
+        const player2card = document.querySelector(".player2");
+        if (player.getName() === (player1card === null || player1card === void 0 ? void 0 : player1card.textContent) && player2card) {
+            player1card.classList.add("turn");
+            if (player2card.classList.contains("turn")) {
+                player2card.classList.remove("turn");
+            }
+        }
+        else if (player.getName() === (player2card === null || player2card === void 0 ? void 0 : player2card.textContent) && player1card) {
+            player2card.classList.add("turn");
+            if (player1card.classList.contains("turn")) {
+                player1card.classList.remove("turn");
+            }
+        }
+    };
     return {
         renderBoard,
+        displayGame,
+        showTurn
     };
 })();
 function play(e) {
-    if (!game.player1) {
-        game.init();
-    }
     if (e.target instanceof Element) {
         let index = e.target.getAttribute("data-index");
         if (typeof index === "string") {
@@ -125,7 +170,23 @@ function play(e) {
         }
     }
 }
+function isInputElement(element) {
+    return ((element === null || element === void 0 ? void 0 : element.id) === "player1") || ((element === null || element === void 0 ? void 0 : element.id) === "player2");
+}
+function begin(e) {
+    e.preventDefault();
+    if (e.target instanceof Element) {
+        let player1 = e.target.querySelector("#player1");
+        let player2 = e.target.querySelector("#player2");
+        if (isInputElement(player1) && isInputElement(player2)) {
+            displayControl.displayGame(player1.value, player2.value);
+            game.init(player1.value, player2.value);
+        }
+    }
+}
 const cells = document.querySelectorAll(".cell");
 cells.forEach((cell) => {
     cell.addEventListener("click", play);
 });
+const form = document.querySelector("form");
+form === null || form === void 0 ? void 0 : form.addEventListener("submit", begin);

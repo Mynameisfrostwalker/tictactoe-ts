@@ -92,6 +92,16 @@ form button:hover {
 
 header {
     flex: 0 0 10vh;
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    font-size: calc(15px + 5vw);
+}
+
+header div {
+    padding: 10px;
 }
 
 .container {
@@ -144,4 +154,8 @@ header {
 
 .invisible {
     display: none;
+}
+
+.turn {
+    border: 3px solid var(--theme-color-3);
 }

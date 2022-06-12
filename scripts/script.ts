@@ -99,7 +99,7 @@ const players = (name: string, marker: string): Player => {
 interface Game {
     player1?:  Player,
     player2?: Player,
-    init: () => void,
+    init: (player1Name: string, player2Name: string) => void,
     turn?: string,
     changeTurn?: () => void,
     play?: (index: number) => void,
@@ -108,17 +108,25 @@ interface Game {
 const game: Game = (
     function() {
         const game: Game = {
-            init(): void{
-                this.player1 = players("player1", "A");
-                this.player2 = players("player2", "B");
-                this.turn = this.player1.getMarker()
+            init(player1Name: string, player2Name: string): void {
+                this.player1 = players(player1Name, "A");
+                this.player2 = players(player2Name, "B");
+                this.turn = this.player1.getMarker();
+
                 this.changeTurn = () => {
                     if(this.turn === this.player1?.getMarker()) {
                         this.turn = this.player2?.getMarker();
+                        if(this.player2){
+                            displayControl.showTurn(this.player2)
+                        }
                     }else {
                         this.turn = this.player1?.getMarker();
+                        if(this.player1) {
+                            displayControl.showTurn(this.player1)
+                        }
                     }
                 }
+
                 this.play = (index: number) => {
                     if(typeof this.turn === "string" && this.changeTurn) {
                         gameBoard.setPosition(this.turn, index);
@@ -128,6 +136,10 @@ const game: Game = (
                         }
                     }
                 }
+
+                if(this.player1) {
+                    displayControl.showTurn(this.player1)
+                }
             }
         }
 
@@ -136,7 +148,8 @@ const game: Game = (
 )()
 
 interface displayControl {
-    renderBoard: () => void
+    renderBoard: () => void,
+    displayGame: (player1: string, player2: string) => void
 }
 
 const displayControl = (
@@ -152,16 +165,46 @@ const displayControl = (
             })
         }
 
+        const displayGame = (player1: string, player2: string) => {
+            const wrapper1 = document.querySelector(".wrapper1");
+            const wrapper2 = document.querySelector(".wrapper2");
+            const player1card = document.querySelector(".player1"); 
+            const player2card = document.querySelector(".player2");
+
+            if(wrapper1 && wrapper2 && player1card && player2card) {
+                wrapper1.classList.add("invisible");
+                wrapper2.classList.remove("invisible");
+                player1card.textContent = player1;
+                player2card.textContent = player2;
+            }
+        }
+
+        const showTurn = (player: Player) => {
+            const player1card = document.querySelector(".player1"); 
+            const player2card = document.querySelector(".player2");
+
+            if(player.getName() === player1card?.textContent && player2card) {
+                player1card.classList.add("turn");
+                if(player2card.classList.contains("turn")) {
+                    player2card.classList.remove("turn");
+                }
+            } else if (player.getName() === player2card?.textContent && player1card) {
+                player2card.classList.add("turn")
+                if(player1card.classList.contains("turn")) {
+                    player1card.classList.remove("turn");
+                }
+            }
+        }
+
         return {
             renderBoard,
+            displayGame,
+            showTurn
         }
     }
 )()
 
 function play(e: Event) {
-    if(!game.player1) {
-        game.init();
-    }
     if(e.target instanceof Element) {
         let index = e.target.getAttribute("data-index");
         if(typeof index === "string") {
@@ -173,7 +216,26 @@ function play(e: Event) {
     }
 }
 
+function isInputElement(element: HTMLInputElement | Element | null): element is HTMLInputElement{
+    return (element?.id === "player1") || (element?.id === "player2");
+}
+
+function begin(e: Event) {
+    e.preventDefault();
+    if(e.target instanceof Element) {
+        let player1 = e.target.querySelector("#player1");
+        let player2 = e.target.querySelector("#player2");
+        if(isInputElement(player1) && isInputElement(player2)) {
+            displayControl.displayGame(player1.value, player2.value);
+            game.init(player1.value, player2.value)
+        }
+    }
+}
+
 const cells = document.querySelectorAll(".cell");
 cells.forEach((cell) => {
     cell.addEventListener("click", play)
 })
+
+const form = document.querySelector("form");
+form?.addEventListener("submit", begin)
