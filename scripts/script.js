@@ -79,11 +79,21 @@ const gameBoard = (function () {
         ];
         displayControl.renderBoard();
     };
+    const findEmptyCell = () => {
+        const arr = [];
+        for (let i = 0; i < board.length; i++) {
+            if (board[i] === "") {
+                arr.push(i);
+            }
+        }
+        return arr;
+    };
     return {
         setPosition,
         getPosition,
         gameOver,
-        clear
+        clear,
+        findEmptyCell
     };
 })();
 const players = (name, marker) => {
@@ -98,20 +108,29 @@ const game = (function () {
     }
     let game = {
         begin(e) {
+            var _a;
             e.preventDefault();
-            if (e.target instanceof Element) {
-                let player1 = e.target.querySelector("#player1");
-                let player2 = e.target.querySelector("#player2");
-                if (_isInputElement(player1) && _isInputElement(player2)) {
-                    displayControl.displayGame(player1.value, player2.value);
-                    this.init(player1.value, player2.value);
+            const aicheck = document.querySelector("#AI");
+            const difficulty = (_a = document.querySelector("select")) === null || _a === void 0 ? void 0 : _a.value;
+            if (aicheck instanceof HTMLInputElement) {
+                if (e.target instanceof Element) {
+                    let player1 = e.target.querySelector("#player1");
+                    let player2 = e.target.querySelector("#player2");
+                    if (_isInputElement(player1) && _isInputElement(player2)) {
+                        let p2 = aicheck.checked ? "AI" : player2.value;
+                        let mode = aicheck.checked ? "AI" : "Human";
+                        displayControl.displayGame(player1.value, p2);
+                        this.init(player1.value, p2, mode, difficulty);
+                    }
                 }
             }
         },
-        init(player1Name, player2Name) {
+        init(player1Name, player2Name, mode, difficulty) {
             this.player1 = players(player1Name, "A");
             this.player2 = players(player2Name, "B");
             this.turn = this.player1.getMarker();
+            this.mode = mode;
+            this.difficulty = difficulty;
             this.changeTurn = () => {
                 var _a, _b, _c;
                 if (this.turn === ((_a = this.player1) === null || _a === void 0 ? void 0 : _a.getMarker())) {
@@ -128,8 +147,18 @@ const game = (function () {
                 }
             };
             this.play = (index) => {
+                var _a, _b;
                 if (typeof this.turn === "string" && this.changeTurn) {
-                    gameBoard.setPosition(this.turn, index);
+                    if (mode === "Human" || this.turn === ((_a = this.player1) === null || _a === void 0 ? void 0 : _a.getMarker())) {
+                        if (typeof index === "number") {
+                            gameBoard.setPosition(this.turn, index);
+                        }
+                    }
+                    else {
+                        if (this.difficulty === "easy") {
+                            gameBoard.setPosition(this.turn, aiModes.easyMode());
+                        }
+                    }
                     if (this.player1 && this.player2) {
                         const result = gameBoard.gameOver(this.player1, this.player2);
                         if (result.value === true) {
@@ -138,6 +167,9 @@ const game = (function () {
                         }
                     }
                     this.changeTurn();
+                    if (mode === "AI" && this.play && this.turn === ((_b = this.player2) === null || _b === void 0 ? void 0 : _b.getMarker())) {
+                        this.play();
+                    }
                 }
             };
             if (this.player1) {
@@ -237,7 +269,7 @@ const displayControl = (function () {
     };
     const input2 = document.querySelector("#player2");
     const aicheck = document.querySelector("#AI");
-    const mode = document.querySelector("#mode");
+    const mode = document.querySelector("#difficulty");
     const _toggleMode = (e) => {
         if (e.target instanceof HTMLInputElement) {
             if (e.target.checked) {
@@ -259,5 +291,15 @@ const displayControl = (function () {
         endTurns,
         playGame,
         removeMessage
+    };
+})();
+const aiModes = (function () {
+    const easyMode = () => {
+        const options = gameBoard.findEmptyCell();
+        const value = Math.floor(Math.random() * (options.length + 1));
+        return options[value];
+    };
+    return {
+        easyMode
     };
 })();
